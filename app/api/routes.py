@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+from app.schemas import Usercreate
 
 router = APIRouter()
 
@@ -10,9 +11,9 @@ def root():
         media_type = "application/json;charset=utf-8"
     )
 
-@router.get("/hello")
-def hello():
-    return JSONResponse(
-        content = {"message": "fastapi приветствует!"},
-        media_type = "application/json;charset=utf-8"
-    )
+@router.post("/register")
+def register(user:Usercreate):
+    return{
+        "username": user.username,
+        "password": user.password
+    }
