@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from app.schemas import Usercreate
+from app.schemas import UserCreate
 
 router = APIRouter()
 
@@ -12,7 +12,7 @@ def root():
     )
 
 @router.post("/register")
-def register(user:Usercreate):
+def register(user:UserCreate):
     return{
         "username": user.username,
         "password": user.password
