@@ -1,6 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from app.schemas import UserCreate
+from app.models.user import User
+from app.database.database import get_db
 
 router = APIRouter()
 
@@ -12,7 +15,7 @@ def root():
     )
 
 @router.post("/register")
-def register(user:UserCreate):
+def register(user:UserCreate, db: Session = Depends(get_db)):
 
     if len (user.username) < 3:
         return JSONResponse(
@@ -26,7 +29,18 @@ def register(user:UserCreate):
             media_type = "application/json;charset=utf-8"
         )
 
+    new_user = User(
+        username = user.username,
+        password = user.password
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+
     return{
-        "username": "Пользователь авторизован",
-        "password": user.password
+        "message": "Пользователь успешно зарегистрирован!",
+        "id": new_user.id,
+        "username": new_user.username
     }
