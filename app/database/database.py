@@ -1,8 +1,8 @@
-from SQLAlchemy import create_engine
-from SQLAlchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 
-DATABASE_URL = "sqlite:///./test.db"
+DATABASE_URL = "sqlite:///./password_manager.db"
 
 engine = create_engine(
     DATABASE_URL,
