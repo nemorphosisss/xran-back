@@ -4,6 +4,9 @@ from fastapi.responses import JSONResponse
 from app.schemas import UserCreate
 from app.models.user import User
 from app.database.database import get_db
+from app.security import hash_password
+from app.schemas import UserCreate, UserLogin
+from app.security import hash_password , verify_password
 
 router = APIRouter()
 
@@ -29,9 +32,11 @@ def register(user:UserCreate, db: Session = Depends(get_db)):
             media_type = "application/json;charset=utf-8"
         )
 
+    hashed_password = hash_password(user.password)
+
     new_user = User(
         username = user.username,
-        password = user.password
+        password = hashed_password
     )
 
     db.add(new_user)
@@ -43,4 +48,28 @@ def register(user:UserCreate, db: Session = Depends(get_db)):
         "message": "Пользователь успешно зарегистрирован!",
         "id": new_user.id,
         "username": new_user.username
+    }
+
+@router.post("/login")
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(
+        User.username == user.username
+    ).first()
+
+    if not db_user:
+        return JSONResponse(
+            content = {"message": "Пользователь не найден!"},
+            media_type = "application/json;charset=utf-8"
+        )
+
+    if not verify_password(user.password, db_user.password):
+        return JSONResponse(
+            content = {"message": "Неверный пароль!"},
+            media_type = "application/json;charset=utf-8"
+        )
+
+    return{
+        "message": "Вход выполнен!",
+        "id": db_user.id,
+        "username": db_user.username
     }
