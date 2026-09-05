@@ -4,7 +4,8 @@ from fastapi.responses import JSONResponse
 from app.schemas import UserCreate, UserLogin
 from app.models.user import User
 from app.database.database import get_db
-from app.security import hash_password, verify_password
+from app.security import hash_password, verify_password, create_access_token
+from app.dependencies import get_current_user
 
 router = APIRouter()
 
@@ -68,8 +69,16 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
             media_type="application/json;charset=utf-8"
         )
 
+    token = create_access_token(db_user.id)
+
     return {
-        "message": "Вход выполнен!",
-        "id": db_user.id,
-        "username": db_user.username
+        "access_token": token,
+        "token_type": "bearer"
+    }
+
+@router.get("/me")
+def me(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "username": current_user.username
     }
