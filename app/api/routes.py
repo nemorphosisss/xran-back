@@ -166,7 +166,7 @@ def update_vault_entry(
         )
 
     if entry_update.site_name is not None:
-        entry_site_name = entry_update.site_name
+        entry.site_name = entry_update.site_name
 
     if entry_update.site_url is not None:
         entry.site_url = entry_update.site_url
