@@ -24,3 +24,4 @@ pyjwt==2.8.0
 python-dotenv==1.0.0
 pyjwt==2.10.1
 python-dotenv==1.0.1
+cryptography==43.0.3

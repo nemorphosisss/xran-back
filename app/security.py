@@ -4,6 +4,7 @@ import jwt
 from dotenv import load_dotenv
 from pwdlib import PasswordHash
 from typing import Optional
+from cryptography.fernet import Fernet
 
 load_dotenv()
 
@@ -37,3 +38,12 @@ def decode_access_token(token: str) -> Optional[int]:
         return int(payload["sub"])
     except jwt.PyJWTError:
         return None
+
+ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
+fernet = Fernet(ENCRYPTION_KEY)
+
+def encrypt_password(password: str) -> str:
+    return fernet.encrypt(password.encode()).decode()
+
+def decrypt_password(encrypted_password: str) -> str:
+    return fernet.decrypt(encrypted_password.encode()).decode()
