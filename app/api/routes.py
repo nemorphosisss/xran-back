@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends , status
+from fastapi import APIRouter, Depends , status , HTTPException
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from app.schemas import UserCreate, UserLogin
@@ -7,7 +7,7 @@ from app.database.database import get_db
 from app.security import hash_password, verify_password, create_access_token
 from app.dependencies import get_current_user
 from app.models.vault_entry import VaultEntry
-from app.schemas import VaultEntryCreate, VaultEntryResponse
+from app.schemas import VaultEntryCreate, VaultEntryResponse , VaultEntryWithPassword
 from app.security import encrypt_password, decrypt_password
 
 
@@ -108,3 +108,41 @@ def create_vault_entry(
     db.refresh(new_entry)
 
     return new_entry
+
+@router.get("/vault", response_model=list[VaultEntryResponse])
+def list_vault_entries(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    entries = db.query(VaultEntry).filter(VaultEntry.user_id == current_user.id).all()
+    return entries
+
+@router.get("/vault/{entry_id}", response_model=VaultEntryWithPassword)
+def get_vault_entry(
+    entry_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    entry = db.query(VaultEntry).filter(
+        VaultEntry.id == entry_id,
+        VaultEntry.user_id == current_user.id
+    ).first()
+
+    if entry is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись не найдена",
+        )
+
+    
+    descrypted_password = decrypt_password(entry.encrypted_password)
+
+
+    return VaultEntryWithPassword(
+        id = entry.id,
+        site_name = entry.site_name,
+        site_url = entry.site_url,
+        login = entry.login,
+        created_at = entry.created_at,
+        password = descrypted_password,
+    )

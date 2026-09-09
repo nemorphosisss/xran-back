@@ -25,3 +25,9 @@ class VaultEntryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class VaultEntryUpdate(VaultEntryResponse):
+    password: str
+
+class VaultEntryWithPassword(VaultEntryResponse):
+    password: str
