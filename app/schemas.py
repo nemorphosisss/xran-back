@@ -31,3 +31,9 @@ class VaultEntryUpdate(VaultEntryResponse):
 
 class VaultEntryWithPassword(VaultEntryResponse):
     password: str
+
+class VaultEntryUpdate(BaseModel):
+    site_name: Optional[str] = None
+    site_url: Optional[str] = None
+    login: Optional[str] = None
+    password: Optional[str] = None

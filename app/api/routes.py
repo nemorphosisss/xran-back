@@ -7,7 +7,7 @@ from app.database.database import get_db
 from app.security import hash_password, verify_password, create_access_token
 from app.dependencies import get_current_user
 from app.models.vault_entry import VaultEntry
-from app.schemas import VaultEntryCreate, VaultEntryResponse , VaultEntryWithPassword
+from app.schemas import VaultEntryCreate, VaultEntryResponse , VaultEntryWithPassword, VaultEntryUpdate
 from app.security import encrypt_password, decrypt_password
 
 
@@ -146,3 +146,59 @@ def get_vault_entry(
         created_at = entry.created_at,
         password = descrypted_password,
     )
+
+@router.put("/vault/{entry_id}", response_model=VaultEntryResponse)
+def update_vault_entry(
+    entry_id: int,
+    entry_update: VaultEntryUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    entry = db.query(VaultEntry).filter(
+        VaultEntry.id == entry_id,
+        VaultEntry.user_id == current_user.id
+    ).first()
+
+    if entry is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись не найдена",
+        )
+
+    if entry_update.site_name is not None:
+        entry_site_name = entry_update.site_name
+
+    if entry_update.site_url is not None:
+        entry.site_url = entry_update.site_url
+
+    if entry_update.login is not None:
+        entry.login = entry_update.login
+
+    if entry_update.password is not None:
+        entry.encrypted_password = encrypt_password(entry_update.password)
+
+    db.commit()
+    db.refresh(entry)
+
+    return entry
+
+
+@router.delete("/vault/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_vault_entry(
+    entry_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    entry = db.query(VaultEntry).filter(
+        VaultEntry.id == entry_id,
+        VaultEntry.user_id == current_user.id
+    ).first()
+
+    if entry is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись не найдена"
+        )
+
+    db.delete(entry)
+    db.commit()
