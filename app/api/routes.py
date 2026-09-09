@@ -202,3 +202,9 @@ def delete_vault_entry(
 
     db.delete(entry)
     db.commit()
+
+@router.get("/debug/users")
+def debug_list_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return [{"id": u.id, "username": u.username} for u in users]
+
